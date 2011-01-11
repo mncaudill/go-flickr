@@ -79,7 +79,7 @@ func (request *Request) Execute() (response string, ret os.Error) {
 			s += "&"
 		}
 		i++
-		s += fmt.Sprintf("%s=%s", k, v)
+		s += fmt.Sprintf("%s=%s", k, http.URLEscape(v))
 	}
 
 	res, _, err := http.Get(s)
