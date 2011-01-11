@@ -1,0 +1,15 @@
+===================================================
+go-flickr: A interface to Flickr's API in Google Go
+Author: Nolan Caudill
+Date: 2011-01-10
+License: MIT
+===================================================
+
+This is a simple wrapper in Go to talk to Flickr.
+
+I wrote this mainly as an exercise to learn Go but it is functional.
+
+The best documentation is in flickr_test.go on how to use this package.
+
+TODO:
+- Upload
