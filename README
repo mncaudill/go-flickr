@@ -15,6 +15,9 @@ I don't really know Go so if you see something that could be more idiomatic or w
 
 Upload now works (2011/01/13)
 
+TODO:
+- Currently can only upload JPEGs (hard-coded content-type). Make this a parameter to the upload function
+
 =======================================================================
 
 PACKAGE
