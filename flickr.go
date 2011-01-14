@@ -146,7 +146,7 @@ func (request *Request) Upload(filename string) (response string, err os.Error) 
 	post_req.Body = nopCloser{bytes.NewBufferString(post_body)}
 	post_req.ContentLength = int64(len(post_body))
 
-	// Create and use TCP connection
+	// Create and use TCP connection (lifted mostly wholesale from http.send)
 	conn, err := net.Dial("tcp", "", "api.flickr.com:80")
 	defer conn.Close()
 
