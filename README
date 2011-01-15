@@ -9,11 +9,7 @@ This is a simple wrapper in Go to talk to Flickr.
 
 I wrote this mainly as an exercise to learn Go but it is functional.
 
-The best documentation is in flickr_test.go on how to use this package.
-
 I don't really know Go so if you see something that could be more idiomatic or written better, please let me know!
-
-Upload now works (2011/01/13)
 
 =======================================================================
 
@@ -24,6 +20,10 @@ import "."
 
 TYPES
 
+type Error string
+
+func (e Error) String() string
+
 type Request struct {
     ApiKey string
     Method string
@@ -31,6 +31,8 @@ type Request struct {
 }
 
 func (request *Request) Execute() (response string, ret os.Error)
+
+func (request *Request) Replace(filename string, filetype string) (response string, err os.Error)
 
 func (request *Request) Sign(secret string)
 
