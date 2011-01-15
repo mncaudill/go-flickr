@@ -111,7 +111,7 @@ func encodeQuery(args map[string]string) string {
 	return s
 }
 
-func (request *Request) Upload(filename string) (response string, err os.Error) {
+func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
 	photo_file, error := ioutil.ReadFile(filename)
 	if error != nil {
 		return "", error
@@ -131,7 +131,7 @@ func (request *Request) Upload(filename string) (response string, err os.Error) 
 
 	post_body += "--" + boundary + end
 	post_body += "Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end
-	post_body += "Content-Type: image/jpeg" + end + end
+	post_body += "Content-Type: " + filetype + end + end
 	post_body += string(photo_file) + end
 	post_body += "--" + boundary + "--" + end
 
