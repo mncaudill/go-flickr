@@ -15,8 +15,9 @@ import (
 
 const (
 	endpoint        = "http://api.flickr.com/services/rest/?"
-	upload_endpoint = "http://api.flickr.com/services/upload/"
-	api_host        = "api.flickr.com"
+	uploadEndpoint  = "http://api.flickr.com/services/upload/"
+	replaceEndpoint = "http://api.flickr.com/services/replace/"
+	apiHost         = "api.flickr.com"
 )
 
 type Request struct {
@@ -31,7 +32,6 @@ type nopCloser struct {
 
 func (nopCloser) Close() os.Error { return nil }
 
-// So we can return custom errors
 type Error string
 
 func (e Error) String() string {
@@ -111,10 +111,13 @@ func encodeQuery(args map[string]string) string {
 	return s
 }
 
-func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
+func (request *Request) buildPost(url string, filename string, filetype string) (*http.Request, os.Error) {
+	postRequest := new(http.Request)
+
 	photo_file, error := ioutil.ReadFile(filename)
+
 	if error != nil {
-		return "", error
+		return postRequest, error
 	}
 
 	request.Args["api_key"] = request.ApiKey
@@ -122,29 +125,51 @@ func (request *Request) Upload(filename string, filetype string) (response strin
 	boundary := "----###---###--flickr-go-rules"
 	end := "\r\n"
 
-	post_body := ""
+	postBody := ""
 	for k, v := range request.Args {
-		post_body += "--" + boundary + end
-		post_body += "Content-Disposition: form-data; name=\"" + k + "\"" + end + end
-		post_body += v + end
+		postBody += "--" + boundary + end
+		postBody += "Content-Disposition: form-data; name=\"" + k + "\"" + end + end
+		postBody += v + end
 	}
 
-	post_body += "--" + boundary + end
-	post_body += "Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end
-	post_body += "Content-Type: " + filetype + end + end
-	post_body += string(photo_file) + end
-	post_body += "--" + boundary + "--" + end
+	postBody += "--" + boundary + end
+	postBody += "Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end
+	postBody += "Content-Type: " + filetype + end + end
+	postBody += string(photo_file) + end
+	postBody += "--" + boundary + "--" + end
 
-	post_req := new(http.Request)
-	post_req.Method = "POST"
-	post_req.RawURL = upload_endpoint
-	post_req.Host = api_host
-	post_req.Header = map[string]string{
+	postRequest.Method = "POST"
+	postRequest.RawURL = url
+	postRequest.Host = apiHost
+	postRequest.Header = map[string]string{
 		"Content-Type": "multipart/form-data; boundary=" + boundary + end,
 	}
 
-	post_req.Body = nopCloser{bytes.NewBufferString(post_body)}
-	post_req.ContentLength = int64(len(post_body))
+	postRequest.Body = nopCloser{bytes.NewBufferString(postBody)}
+	postRequest.ContentLength = int64(len(postBody))
+	return postRequest, nil
+}
+
+func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
+
+	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
+	if err != nil {
+		return "", err
+	}
+
+	return sendPost(postRequest)
+}
+
+func (request *Request) Replace(filename string, filetype string) (response string, err os.Error) {
+
+	postRequest, err := request.buildPost(replaceEndpoint, filename, filetype)
+	if err != nil {
+		return "", err
+	}
+	return sendPost(postRequest)
+}
+
+func sendPost(postRequest *http.Request) (body string, err os.Error) {
 
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
 	conn, err := net.Dial("tcp", "", "api.flickr.com:80")
@@ -153,14 +178,14 @@ func (request *Request) Upload(filename string, filetype string) (response strin
 	if err != nil {
 		return "", err
 	}
-	post_req.Write(conn)
+	postRequest.Write(conn)
 
 	reader := bufio.NewReader(conn)
-	resp, err := http.ReadResponse(reader, post_req.Method)
+	resp, err := http.ReadResponse(reader, postRequest.Method)
 	if err != nil {
 		return "", err
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	rawBody, _ := ioutil.ReadAll(resp.Body)
 
-	return string(body), nil
+	return string(rawBody), nil
 }
