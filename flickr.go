@@ -106,7 +106,7 @@ func encodeQuery(args map[string]string) string {
 			s.WriteString("&")
 		}
 		i++
-		s.WriteString(k + http.URLEscape(v))
+		s.WriteString(k + "=" + http.URLEscape(v))
 	}
 	return s.String()
 }
