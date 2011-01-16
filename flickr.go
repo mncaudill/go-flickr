@@ -116,6 +116,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	request.Args["api_key"] = request.ApiKey
 
