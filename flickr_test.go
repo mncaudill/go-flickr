@@ -1,23 +1,23 @@
 package main
 
-import "./flickr"
-import "fmt"
-
+import (
+	"./flickr"
+	"fmt"
+)
 
 func main() {
 	r := new(flickr.Request)
-	r.ApiKey = "APIKEYHERE"
-	r.Method = "flickr.photos.getInfo"
+	r.ApiKey = "YOURAPIKEYHERE"
 
-	r.Args = make(map[string]string, 10)
-	r.Args["photo_id"] = "5336400553"
-
-	r.Sign("APISECRETHERE")
-	_, err := r.Execute()
-	if err != nil {
-		fmt.Println("Something went wrong:", err)
+	r.Args = map[string]string{
+		"auth_token": "72157625826023910-2ab8f4da623e6ca8",
+		"title":      "Good mornin'",
 	}
-//	fmt.Println(body)
 
-	r.Upload("thumb.jpg")
+	r.Sign("YOURAPISECRETHERE")
+	resp, err := r.Upload("thumb.jpg", "image/jpeg")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(resp)
 }
