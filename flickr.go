@@ -99,15 +99,16 @@ func (request *Request) Execute() (response string, ret os.Error) {
 }
 
 func encodeQuery(args map[string]string) string {
-	s, i := "", 0
+	i := 0
+	s := bytes.NewBuffer(nil)
 	for k, v := range args {
 		if i != 0 {
-			s += "&"
+			s.WriteString("&")
 		}
 		i++
-		s += fmt.Sprintf("%s=%s", k, http.URLEscape(v))
+		s.WriteString(k + http.URLEscape(v))
 	}
-	return s
+	return s.String()
 }
 
 func (request *Request) buildPost(url string, filename string, filetype string) (*http.Request, os.Error) {
