@@ -10,7 +10,7 @@ func main() {
 	r.ApiKey = "YOURAPIKEYHERE"
 
 	r.Args = map[string]string{
-		"auth_token": "72157625826023910-2ab8f4da623e6ca8",
+		"auth_token": "YOURAUTHTOKENHERE",
 		"title":      "Good mornin'",
 	}
 
