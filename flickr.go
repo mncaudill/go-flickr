@@ -164,6 +164,10 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 
 		// Send footer
 		_, err = io.Copy(w, footer)
+		if err != nil {
+			w.CloseWithError(err)
+			return
+		}
 
 		f.Close()
 		w.Close()
