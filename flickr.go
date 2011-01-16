@@ -99,8 +99,7 @@ func (request *Request) Execute() (response string, ret os.Error) {
 }
 
 func encodeQuery(args map[string]string) string {
-	s := ""
-	i := 0
+	s, i := "", 0
 	for k, v := range args {
 		if i != 0 {
 			s += "&"
@@ -112,12 +111,9 @@ func encodeQuery(args map[string]string) string {
 }
 
 func (request *Request) buildPost(url string, filename string, filetype string) (*http.Request, os.Error) {
-	postRequest := new(http.Request)
-
-	photo_file, error := ioutil.ReadFile(filename)
-
-	if error != nil {
-		return postRequest, error
+	f, err := os.Open(filename, os.O_RDONLY, 0)
+	if err != nil {
+		return nil, err
 	}
 
 	request.Args["api_key"] = request.ApiKey
@@ -125,19 +121,27 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	boundary := "----###---###--flickr-go-rules"
 	end := "\r\n"
 
-	postBody := ""
+	body := bytes.NewBuffer(nil)
 	for k, v := range request.Args {
-		postBody += "--" + boundary + end
-		postBody += "Content-Disposition: form-data; name=\"" + k + "\"" + end + end
-		postBody += v + end
+		body.WriteString("--" + boundary + end)
+		body.WriteString("Content-Disposition: form-data; name=\"" + k + "\"" + end + end)
+		body.WriteString(v + end)
 	}
 
-	postBody += "--" + boundary + end
-	postBody += "Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end
-	postBody += "Content-Type: " + filetype + end + end
-	postBody += string(photo_file) + end
-	postBody += "--" + boundary + "--" + end
+	body.WriteString("--" + boundary + end)
+	body.WriteString("Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end)
+	body.WriteString("Content-Type: " + filetype + end + end)
 
+	// Write file
+	_, err = io.Copy(body, f)
+	if err != nil {
+		return nil, err
+	}
+
+	body.WriteString(end)
+	body.WriteString("--" + boundary + "--" + end)
+
+	postRequest := new(http.Request)
 	postRequest.Method = "POST"
 	postRequest.RawURL = url
 	postRequest.Host = apiHost
@@ -145,13 +149,12 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 		"Content-Type": "multipart/form-data; boundary=" + boundary + end,
 	}
 
-	postRequest.Body = nopCloser{bytes.NewBufferString(postBody)}
-	postRequest.ContentLength = int64(len(postBody))
+	postRequest.Body = nopCloser{body}
+	postRequest.ContentLength = int64(body.Len())
 	return postRequest, nil
 }
 
 func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
-
 	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
 	if err != nil {
 		return "", err
@@ -161,7 +164,6 @@ func (request *Request) Upload(filename string, filetype string) (response strin
 }
 
 func (request *Request) Replace(filename string, filetype string) (response string, err os.Error) {
-
 	postRequest, err := request.buildPost(replaceEndpoint, filename, filetype)
 	if err != nil {
 		return "", err
@@ -170,7 +172,6 @@ func (request *Request) Replace(filename string, filetype string) (response stri
 }
 
 func sendPost(postRequest *http.Request) (body string, err os.Error) {
-
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
 	conn, err := net.Dial("tcp", "", "api.flickr.com:80")
 	defer conn.Close()
