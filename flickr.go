@@ -88,6 +88,7 @@ func (request *Request) Execute() (response string, ret os.Error) {
 
 	s := endpoint + encodeQuery(args)
 
+	fmt.Println(s)
 	res, _, err := http.Get(s)
 	defer res.Body.Close()
 	if err != nil {
@@ -116,32 +117,57 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+
+	stat, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	f_size := stat.Size
 
 	request.Args["api_key"] = request.ApiKey
 
 	boundary := "----###---###--flickr-go-rules"
+
 	end := "\r\n"
 
-	body := bytes.NewBuffer(nil)
+	// Build out all of POST body sans file
+	header := bytes.NewBuffer(nil)
 	for k, v := range request.Args {
-		body.WriteString("--" + boundary + end)
-		body.WriteString("Content-Disposition: form-data; name=\"" + k + "\"" + end + end)
-		body.WriteString(v + end)
+		header.WriteString("--" + boundary + end)
+		header.WriteString("Content-Disposition: form-data; name=\"" + k + "\"" + end + end)
+		header.WriteString(v + end)
 	}
+	header.WriteString("--" + boundary + end)
+	header.WriteString("Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end)
+	header.WriteString("Content-Type: " + filetype + end + end)
 
-	body.WriteString("--" + boundary + end)
-	body.WriteString("Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end)
-	body.WriteString("Content-Type: " + filetype + end + end)
+	footer := bytes.NewBuffer(nil)
+	footer.WriteString(end + "--" + boundary + "--" + end)
 
-	// Write file
-	_, err = io.Copy(body, f)
-	if err != nil {
-		return nil, err
-	}
+	body_len := int64(header.Len()) + int64(footer.Len()) + f_size
 
-	body.WriteString(end)
-	body.WriteString("--" + boundary + "--" + end)
+	r, w := io.Pipe()
+	go func() {
+		// Send header
+		_, err = io.Copy(w, header)
+		if err != nil {
+			w.CloseWithError(nil)
+			return
+		}
+
+		// Write file
+		_, err = io.Copy(w, f)
+		if err != nil {
+			w.CloseWithError(err)
+			return
+		}
+
+		// Send footer
+		_, err = io.Copy(w, footer)
+
+		f.Close()
+		w.Close()
+	}()
 
 	postRequest := new(http.Request)
 	postRequest.Method = "POST"
@@ -150,9 +176,8 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	postRequest.Header = map[string]string{
 		"Content-Type": "multipart/form-data; boundary=" + boundary + end,
 	}
-
-	postRequest.Body = nopCloser{body}
-	postRequest.ContentLength = int64(body.Len())
+	postRequest.Body = r
+	postRequest.ContentLength = body_len
 	return postRequest, nil
 }
 
