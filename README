@@ -38,4 +38,6 @@ func (request *Request) Replace(filename string, filetype string) (response stri
 
 func (request *Request) Sign(secret string)
 
+func (request *Request) URL() string
+
 func (request *Request) Upload(filename string, filetype string) (response string, err os.Error)

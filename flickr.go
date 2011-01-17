@@ -76,17 +76,22 @@ func (request *Request) Sign(secret string) {
 	args["api_sig"] = fmt.Sprintf("%x", hash.Sum())
 }
 
-func (request *Request) Execute() (response string, ret os.Error) {
+func (request *Request) URL() string {
 	args := request.Args
-
-	if request.ApiKey == "" || request.Method == "" {
-		return "", Error("Need both API key and method")
-	}
 
 	args["api_key"] = request.ApiKey
 	args["method"] = request.Method
 
 	s := endpoint + encodeQuery(args)
+	return s
+}
+
+func (request *Request) Execute() (response string, ret os.Error) {
+	if request.ApiKey == "" || request.Method == "" {
+		return "", Error("Need both API key and method")
+	}
+
+	s := request.URL()
 
 	res, _, err := http.Get(s)
 	defer res.Body.Close()
