@@ -126,9 +126,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 
 	request.Args["api_key"] = request.ApiKey
 
-	boundary := "----###---###--flickr-go-rules"
-
-	end := "\r\n"
+	boundary, end := "----###---###--flickr-go-rules", "\r\n"
 
 	// Build out all of POST body sans file
 	header := bytes.NewBuffer(nil)
@@ -148,28 +146,16 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 
 	r, w := io.Pipe()
 	go func() {
-		// Send header
-		_, err = io.Copy(w, header)
-		if err != nil {
-			w.CloseWithError(nil)
-			return
+		pieces := []io.Reader{header, f, footer}
+
+		for _, k := range pieces {
+			_, err = io.Copy(w, k)
+			if err != nil {
+				w.CloseWithError(nil)
+				return
+			}
 		}
 
-		// Write file
-		_, err = io.Copy(w, f)
-		if err != nil {
-			w.CloseWithError(err)
-			return
-		}
-
-		// Send footer
-		_, err = io.Copy(w, footer)
-		if err != nil {
-			w.CloseWithError(err)
-			return
-		}
-
-		f.Close()
 		w.Close()
 	}()
 
