@@ -41,6 +41,9 @@ func (e Error) String() string {
 func (request *Request) Sign(secret string) {
 	args := request.Args
 
+	// Remove api_sig
+	args["api_sig"] = "", false
+
 	sorted_keys := make([]string, len(args)+2)
 
 	args["api_key"] = request.ApiKey
