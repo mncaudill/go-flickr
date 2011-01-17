@@ -155,7 +155,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 				return
 			}
 		}
-
+		f.Close()
 		w.Close()
 	}()
 
