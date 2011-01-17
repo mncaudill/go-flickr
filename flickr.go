@@ -88,7 +88,6 @@ func (request *Request) Execute() (response string, ret os.Error) {
 
 	s := endpoint + encodeQuery(args)
 
-	fmt.Println(s)
 	res, _, err := http.Get(s)
 	defer res.Body.Close()
 	if err != nil {
