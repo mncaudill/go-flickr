@@ -146,8 +146,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	header.WriteString("Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"" + end)
 	header.WriteString("Content-Type: " + filetype + end + end)
 
-	footer := bytes.NewBuffer(nil)
-	footer.WriteString(end + "--" + boundary + "--" + end)
+	footer := bytes.NewBufferString(end + "--" + boundary + "--" + end)
 
 	body_len := int64(header.Len()) + int64(footer.Len()) + f_size
 
