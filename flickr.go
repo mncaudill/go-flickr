@@ -51,7 +51,7 @@ func (request *Request) Sign(secret string) {
 
 	// Sort array keys
 	i := 0
-	for k, _ := range args {
+	for k := range args {
 		sorted_keys[i] = k
 		i++
 	}
