@@ -17,6 +17,9 @@ To compile and install:
 make
 make install
 
+To test:
+gotest
+
 =======================================================================
 
 PACKAGE

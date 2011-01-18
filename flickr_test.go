@@ -1,21 +1,25 @@
-package main
+package flickr
 
 import (
-	"flickr"
 	"fmt"
+	"testing"
 )
 
-func main() {
-	r := new(flickr.Request)
-	r.ApiKey = "YOURAPIKEYHERE"
-
-	r.Args = map[string]string{
-		"auth_token": "YOURAUTHTOKENHERE",
-		"title":      "Good mornin'",
+func TestGetInfo(t *testing.T) {
+	r := &Request{
+		ApiKey: "YOURAPIKEYHERE",
+		Method: "flickr.photos.getInfo",
+		Args: map[string]string{
+			"photo_id": "5356343650",
+		},
 	}
 
+	// Don't need to sign but might as well since we're testing
 	r.Sign("YOURAPISECRETHERE")
-	resp, err := r.Upload("thumb.jpg", "image/jpeg")
+
+	fmt.Println(r.URL())
+
+	resp, err := r.Execute()
 	if err != nil {
 		fmt.Println(err)
 	}
