@@ -178,6 +178,8 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	return postRequest, nil
 }
 
+// Example: 
+// r.Upload("thumb.jpg", "image/jpeg")
 func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
 	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
 	if err != nil {

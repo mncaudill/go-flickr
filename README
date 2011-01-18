@@ -48,3 +48,6 @@ func (request *Request) Sign(secret string)
 func (request *Request) URL() string
 
 func (request *Request) Upload(filename string, filetype string) (response string, err os.Error)
+Example:
+r.Upload("thumb.jpg", "image/jpeg")
+
