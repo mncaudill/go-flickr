@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./flickr"
+	"flickr"
 	"fmt"
 )
 
