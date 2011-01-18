@@ -13,6 +13,10 @@ I don't really know Go so if you see something that could be more idiomatic or w
 
 The godoc below is the best place to learn how to use this library.
 
+To compile and install:
+make
+make install
+
 =======================================================================
 
 PACKAGE
