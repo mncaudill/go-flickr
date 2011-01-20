@@ -170,7 +170,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 		RawURL: url,
 		Host:   apiHost,
 		Header: map[string]string{
-			"Content-Type": "multipart/form-data; boundary=" + boundary + end,
+			"Content-Type": "multipart/form-data; boundary=" + boundary,
 		},
 		Body:          r,
 		ContentLength: body_len,
