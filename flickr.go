@@ -166,13 +166,13 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 	}()
 
 	http_header := make(http.Header)
-	http_header.Add("Content-Type", "multipart/form-data; boundary=" + boundary)
+	http_header.Add("Content-Type", "multipart/form-data; boundary="+boundary)
 
 	postRequest := &http.Request{
-		Method: "POST",
-		RawURL: url,
-		Host:   apiHost,
-		Header: http_header,
+		Method:        "POST",
+		RawURL:        url,
+		Host:          apiHost,
+		Header:        http_header,
 		Body:          r,
 		ContentLength: body_len,
 	}
