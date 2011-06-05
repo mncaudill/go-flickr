@@ -120,7 +120,7 @@ func encodeQuery(args map[string]string) string {
 }
 
 func (request *Request) buildPost(url string, filename string, filetype string) (*http.Request, os.Error) {
-	f, err := os.Open(filename, os.O_RDONLY, 0)
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (request *Request) Replace(filename string, filetype string) (response stri
 
 func sendPost(postRequest *http.Request) (body string, err os.Error) {
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
-	conn, err := net.Dial("tcp", "", "api.flickr.com:80")
+	conn, err := net.Dial("tcp", "api.flickr.com:80")
 	defer conn.Close()
 
 	if err != nil {
