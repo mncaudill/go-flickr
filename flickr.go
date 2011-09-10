@@ -1,16 +1,17 @@
 package flickr
 
 import (
-	"io"
-	"os"
-	"fmt"
-	"net"
-	"http"
-	"sort"
 	"bufio"
 	"bytes"
-	"io/ioutil"
 	"crypto/md5"
+	"fmt"
+	"http"
+	"io"
+	"io/ioutil"
+	"net"
+	"os"
+	"sort"
+	"url"
 )
 
 const (
@@ -55,7 +56,7 @@ func (request *Request) Sign(secret string) {
 		sorted_keys[i] = k
 		i++
 	}
-	sort.SortStrings(sorted_keys)
+	sort.Strings(sorted_keys)
 
 	// Build out ordered key-value string prefixed by secret
 	s := secret
@@ -96,7 +97,7 @@ func (request *Request) Execute() (response string, ret os.Error) {
 
 	s := request.URL()
 
-	res, _, err := http.Get(s)
+	res, err := http.Get(s)
 	defer res.Body.Close()
 	if err != nil {
 		return "", err
@@ -114,12 +115,12 @@ func encodeQuery(args map[string]string) string {
 			s.WriteString("&")
 		}
 		i++
-		s.WriteString(k + "=" + http.URLEscape(v))
+		s.WriteString(k + "=" + url.QueryEscape(v))
 	}
 	return s.String()
 }
 
-func (request *Request) buildPost(url string, filename string, filetype string) (*http.Request, os.Error) {
+func (request *Request) buildPost(url_ string, filename string, filetype string) (*http.Request, os.Error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -170,7 +171,7 @@ func (request *Request) buildPost(url string, filename string, filetype string) 
 
 	postRequest := &http.Request{
 		Method:        "POST",
-		RawURL:        url,
+		RawURL:        url_,
 		Host:          apiHost,
 		Header:        http_header,
 		Body:          r,
@@ -209,7 +210,7 @@ func sendPost(postRequest *http.Request) (body string, err os.Error) {
 	postRequest.Write(conn)
 
 	reader := bufio.NewReader(conn)
-	resp, err := http.ReadResponse(reader, postRequest.Method)
+	resp, err := http.ReadResponse(reader, postRequest)
 	if err != nil {
 		return "", err
 	}
