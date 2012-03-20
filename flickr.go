@@ -1,17 +1,15 @@
 package flickr
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"http"
 	"io"
 	"io/ioutil"
-	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"sort"
-	"url"
 )
 
 const (
@@ -31,11 +29,11 @@ type nopCloser struct {
 	io.Reader
 }
 
-func (nopCloser) Close() os.Error { return nil }
+func (nopCloser) Close() error { return nil }
 
 type Error string
 
-func (e Error) String() string {
+func (e Error) Error() string {
 	return string(e)
 }
 
@@ -43,7 +41,7 @@ func (request *Request) Sign(secret string) {
 	args := request.Args
 
 	// Remove api_sig
-	args["api_sig"] = "", false
+	delete(args, "api_sig")
 
 	sorted_keys := make([]string, len(args)+2)
 
@@ -69,15 +67,15 @@ func (request *Request) Sign(secret string) {
 	// Since we're only adding two keys, it's easier 
 	// and more space-efficient to just delete them
 	// them copy the whole map
-	args["api_key"] = "", false
-	args["method"] = "", false
+	delete(args, "api_key")
+	delete(args, "method")
 
 	// Have the full string, now hash
 	hash := md5.New()
 	hash.Write([]byte(s))
 
 	// Add api_sig as one of the args
-	args["api_sig"] = fmt.Sprintf("%x", hash.Sum())
+	args["api_sig"] = fmt.Sprintf("%x", hash.Sum(nil))
 }
 
 func (request *Request) URL() string {
@@ -90,7 +88,7 @@ func (request *Request) URL() string {
 	return s
 }
 
-func (request *Request) Execute() (response string, ret os.Error) {
+func (request *Request) Execute() (response string, ret error) {
 	if request.ApiKey == "" || request.Method == "" {
 		return "", Error("Need both API key and method")
 	}
@@ -120,7 +118,9 @@ func encodeQuery(args map[string]string) string {
 	return s.String()
 }
 
-func (request *Request) buildPost(url_ string, filename string, filetype string) (*http.Request, os.Error) {
+func (request *Request) buildPost(url_ string, filename string, filetype string) (*http.Request, error) {
+	real_url, _ := url.Parse(url_)
+
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 	if err != nil {
 		return nil, err
 	}
-	f_size := stat.Size
+	f_size := stat.Size()
 
 	request.Args["api_key"] = request.ApiKey
 
@@ -171,7 +171,7 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 
 	postRequest := &http.Request{
 		Method:        "POST",
-		RawURL:        url_,
+		URL:           real_url,
 		Host:          apiHost,
 		Header:        http_header,
 		Body:          r,
@@ -182,16 +182,15 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 
 // Example: 
 // r.Upload("thumb.jpg", "image/jpeg")
-func (request *Request) Upload(filename string, filetype string) (response string, err os.Error) {
+func (request *Request) Upload(filename string, filetype string) (response string, err error) {
 	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
 	if err != nil {
 		return "", err
 	}
-
 	return sendPost(postRequest)
 }
 
-func (request *Request) Replace(filename string, filetype string) (response string, err os.Error) {
+func (request *Request) Replace(filename string, filetype string) (response string, err error) {
 	postRequest, err := request.buildPost(replaceEndpoint, filename, filetype)
 	if err != nil {
 		return "", err
@@ -199,22 +198,16 @@ func (request *Request) Replace(filename string, filetype string) (response stri
 	return sendPost(postRequest)
 }
 
-func sendPost(postRequest *http.Request) (body string, err os.Error) {
+func sendPost(postRequest *http.Request) (body string, err error) {
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
-	conn, err := net.Dial("tcp", "api.flickr.com:80")
-	defer conn.Close()
+	client := &http.DefaultClient
+	resp, err := client.Do(postRequest)
 
-	if err != nil {
-		return "", err
-	}
-	postRequest.Write(conn)
-
-	reader := bufio.NewReader(conn)
-	resp, err := http.ReadResponse(reader, postRequest)
 	if err != nil {
 		return "", err
 	}
 	rawBody, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 
 	return string(rawBody), nil
 }
