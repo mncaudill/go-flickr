@@ -64,7 +64,7 @@ func (request *Request) Sign(secret string) {
 		}
 	}
 
-	// Since we're only adding two keys, it's easier 
+	// Since we're only adding two keys, it's easier
 	// and more space-efficient to just delete them
 	// them copy the whole map
 	delete(args, "api_key")
@@ -180,7 +180,7 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 	return postRequest, nil
 }
 
-// Example: 
+// Example:
 // r.Upload("thumb.jpg", "image/jpeg")
 func (request *Request) Upload(filename string, filetype string) (response string, err error) {
 	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
