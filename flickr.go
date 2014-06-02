@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	endpoint        = "http://api.flickr.com/services/rest/?"
-	uploadEndpoint  = "http://api.flickr.com/services/upload/"
-	replaceEndpoint = "http://api.flickr.com/services/replace/"
+	endpoint        = "https://api.flickr.com/services/rest/?"
+	uploadEndpoint  = "https://api.flickr.com/services/upload/"
+	replaceEndpoint = "https://api.flickr.com/services/replace/"
 	apiHost         = "api.flickr.com"
 )
 
