@@ -3,6 +3,7 @@ package flickr
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,6 +24,17 @@ type Request struct {
 	ApiKey string
 	Method string
 	Args   map[string]string
+}
+
+type Response struct {
+	Status  string         `xml:"stat,attr"`
+	Error   *ResponseError `xml:"err"`
+	Payload string         `xml:",innerxml"`
+}
+
+type ResponseError struct {
+	Code    string `xml:"code,attr"`
+	Message string `xml:"msg,attr"`
 }
 
 type nopCloser struct {
@@ -182,32 +194,35 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 
 // Example:
 // r.Upload("thumb.jpg", "image/jpeg")
-func (request *Request) Upload(filename string, filetype string) (response string, err error) {
+func (request *Request) Upload(filename string, filetype string) (response *Response, err error) {
 	postRequest, err := request.buildPost(uploadEndpoint, filename, filetype)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return sendPost(postRequest)
 }
 
-func (request *Request) Replace(filename string, filetype string) (response string, err error) {
+func (request *Request) Replace(filename string, filetype string) (response *Response, err error) {
 	postRequest, err := request.buildPost(replaceEndpoint, filename, filetype)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return sendPost(postRequest)
 }
 
-func sendPost(postRequest *http.Request) (body string, err error) {
+func sendPost(postRequest *http.Request) (response *Response, err error) {
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
 	client := &http.DefaultClient
 	resp, err := client.Do(postRequest)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	rawBody, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 
-	return string(rawBody), nil
+	var r Response
+	err = xml.Unmarshal(rawBody, &r)
+
+	return &r, err
 }
