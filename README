@@ -14,8 +14,7 @@ I don't really know Go so if you see something that could be more idiomatic or w
 The godoc below is the best place to learn how to use this library.
 
 To compile and install:
-make
-make install
+go build
 
 To test:
 gotest
@@ -39,15 +38,22 @@ type Request struct {
     Args   map[string]string
 }
 
+type Response struct {
+	Status  string         `xml:"stat,attr"`
+	Error   *ResponseError `xml:"err"`
+	Payload map[string]bool
+}
+
 func (request *Request) Execute() (response string, ret os.Error)
 
-func (request *Request) Replace(filename string, filetype string) (response string, err os.Error)
+func (request *Request) Replace(filename string, filetype string) (response Response, err os.Error)
 
 func (request *Request) Sign(secret string)
 
 func (request *Request) URL() string
 
-func (request *Request) Upload(filename string, filetype string) (response string, err os.Error)
+func (request *Request) Upload(filename string, filetype string) (response Response, err os.Error)
+
 Example:
 r.Upload("thumb.jpg", "image/jpeg")
 
