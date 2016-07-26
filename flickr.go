@@ -212,7 +212,7 @@ func (request *Request) Replace(filename string, filetype string) (response *Res
 
 func sendPost(postRequest *http.Request) (response *Response, err error) {
 	// Create and use TCP connection (lifted mostly wholesale from http.send)
-	client := &http.DefaultClient
+	client := http.DefaultClient
 	resp, err := client.Do(postRequest)
 
 	if err != nil {
