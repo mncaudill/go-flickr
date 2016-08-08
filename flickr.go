@@ -6,7 +6,9 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -180,9 +182,7 @@ func (request *Request) ExecuteAuthenticated() (string, error) {
 	}
 	// generating a signature requires ordered parameters, sorted by lexicographical
 	// byte order
-	//args := make(map[string]string)
 	args := request.Args
-	args["nojsoncallback"] = "1"
 	args["oauth_nonce"] = nonce
 	args["oauth_timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	args["oauth_consumer_key"] = request.ApiKey
@@ -205,6 +205,15 @@ func (request *Request) ExecuteAuthenticated() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	var jsonBlob interface{}
+	err = json.Unmarshal([]byte(string(body)), &jsonBlob)
+	m := jsonBlob.(map[string]interface{})
+	if m["stat"].(string) == "fail" {
+		errStr := fmt.Sprintf("Response error: Code: %d; Message: %s", int(m["code"].(float64)), m["message"].(string))
+		return "", errors.New(errStr)
+	}
+
 	return string(body), nil
 }
 
