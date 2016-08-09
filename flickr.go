@@ -157,10 +157,10 @@ func (request *Request) RequestToken() (map[string]string, error) {
 	s := oauthEndPoint + "request_token?" + encodeQuery(args)
 
 	res, err := http.Get(s)
-	defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -196,10 +196,10 @@ func (request *Request) ExecuteAuthenticated() (string, error) {
 	s := endpoint + encodeQuery(args)
 
 	res, err := http.Get(s)
-	defer res.Body.Close()
 	if err != nil {
 		return "", err
 	}
+	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -242,10 +242,10 @@ func (request *Request) AccessToken(oauth_token string, oauth_verifier string, o
 	s := oauthEndPoint + "access_token?" + encodeQuery(args)
 
 	res, err := http.Get(s)
-	defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	body, _ := ioutil.ReadAll(res.Body)
 	kvs := strings.Split(string(body), "&")
