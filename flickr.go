@@ -46,8 +46,15 @@ func (nopCloser) Close() error { return nil }
 
 var ErrNeedBothAPIKeyAndMethod = errors.New("Need both API key and method")
 
+func (request *Request) GetArgs() map[string]string {
+	if request.Args == nil {
+		request.Args = make(map[string]string)
+	}
+	return request.Args
+}
+
 func (request *Request) Sign(secret string) {
-	args := request.Args
+	args := request.GetArgs()
 
 	// Remove api_sig
 	delete(args, "api_sig")
@@ -84,7 +91,7 @@ func (request *Request) Sign(secret string) {
 }
 
 func (request *Request) URL() string {
-	args := request.Args
+	args := request.GetArgs()
 
 	args["api_key"] = request.ApiKey
 	args["method"] = request.Method
@@ -140,13 +147,14 @@ func (request *Request) buildPost(url_ string, filename string, filetype string)
 	}
 	f_size := stat.Size()
 
-	request.Args["api_key"] = request.ApiKey
+	args := request.GetArgs()
+	args["api_key"] = request.ApiKey
 
 	boundary, end := "----###---###--flickr-go-rules", "\r\n"
 
 	// Build out all of POST body sans file
 	header := bytes.NewBuffer(nil)
-	for k, v := range request.Args {
+	for k, v := range args {
 		header.WriteString("--" + boundary + end)
 		header.WriteString("Content-Disposition: form-data; name=\"" + k + "\"" + end + end)
 		header.WriteString(v + end)
