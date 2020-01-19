@@ -108,10 +108,10 @@ func (request *Request) Execute() (response string, ret error) {
 	s := request.URL()
 
 	res, err := http.Get(s)
-	defer res.Body.Close()
 	if err != nil {
 		return "", err
 	}
+	defer res.Body.Close()
 
 	body, _ := ioutil.ReadAll(res.Body)
 	return string(body), nil
