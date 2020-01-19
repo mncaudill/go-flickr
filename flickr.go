@@ -131,7 +131,10 @@ func encodeQuery(args map[string]string) string {
 }
 
 func (request *Request) buildPost(url_ string, filename string, filetype string) (*http.Request, error) {
-	real_url, _ := url.Parse(url_)
+	real_url, err := url.Parse(url_)
+	if err != nil {
+		return nil, err
+	}
 
 	f, err := os.Open(filename)
 	if err != nil {
