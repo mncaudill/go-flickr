@@ -113,8 +113,8 @@ func (request *Request) Execute() (response string, ret error) {
 	}
 	defer res.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
-	return string(body), nil
+	body, err := ioutil.ReadAll(res.Body)
+	return string(body), err
 }
 
 func encodeQuery(args map[string]string) string {
