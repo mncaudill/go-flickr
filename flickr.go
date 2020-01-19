@@ -79,12 +79,8 @@ func (request *Request) Sign(secret string) {
 	delete(args, "api_key")
 	delete(args, "method")
 
-	// Have the full string, now hash
-	hash := md5.New()
-	hash.Write([]byte(s))
-
 	// Add api_sig as one of the args
-	args["api_sig"] = fmt.Sprintf("%x", hash.Sum(nil))
+	args["api_sig"] = fmt.Sprintf("%x", md5.Sum([]byte(s)))
 }
 
 func (request *Request) URL() string {
