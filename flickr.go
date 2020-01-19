@@ -214,8 +214,11 @@ func sendPost(postRequest *http.Request) (response *Response, err error) {
 	if err != nil {
 		return nil, err
 	}
-	rawBody, _ := ioutil.ReadAll(resp.Body)
+	rawBody, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	var r Response
 	err = xml.Unmarshal(rawBody, &r)
