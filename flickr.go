@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -43,11 +44,7 @@ type nopCloser struct {
 
 func (nopCloser) Close() error { return nil }
 
-type Error string
-
-func (e Error) Error() string {
-	return string(e)
-}
+var ErrNeedBothAPIKeyAndMethod = errors.New("Need both API key and method")
 
 func (request *Request) Sign(secret string) {
 	args := request.Args
@@ -102,7 +99,7 @@ func (request *Request) URL() string {
 
 func (request *Request) Execute() (response string, ret error) {
 	if request.ApiKey == "" || request.Method == "" {
-		return "", Error("Need both API key and method")
+		return "", ErrNeedBothAPIKeyAndMethod
 	}
 
 	s := request.URL()
